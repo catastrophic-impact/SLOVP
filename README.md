@@ -30,3 +30,14 @@ MPV (Flatpak `io.mpv.Mpv` or native). ffmpeg is only for audio conversion and me
 ```
 bash scripts/build.sh
 ```
+(Run it inside an Ubuntu 22.04 distrobox; `bash scripts/setup-box.sh` provisions one.) The result is `release/SLOVP-<version>.AppImage`.
+
+## Known limits
+
+- Rumble Shorts cannot be played yet (yt-dlp has no support for them).
+- The Rumble tab reads Rumble's public pages with a hidden browser at a slow pace, so a change to Rumble's markup can break it, and its terms of service apply to how you use it.
+- Playlists are available in the YouTube tab only.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
