@@ -1,7 +1,8 @@
+@font-face { font-family: "Inter"; src: url("fonts/Inter.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
 :root { --bg: #0f0f12; --panel: #17171c; --panel2: #1f1f26; --line: #2a2a33; --text: #ececf1; --muted: #8b8b99; --accent: #ff4d4d; }
 * { box-sizing: border-box; }
 html, body { height: 44px; margin: 0; overflow: hidden; }
-body { background: var(--panel); color: var(--text); font: 14px/1.4 system-ui, 'Segoe UI', 'DejaVu Sans', sans-serif; }
+body { background: var(--panel); color: var(--text); font: 14px/1.4 "Inter", system-ui, 'Segoe UI', 'DejaVu Sans', sans-serif; }
 .tabbar { height: 44px; display: flex; align-items: stretch; gap: 18px; padding: 0 14px; border-bottom: 1px solid var(--line); }
 .brand { align-self: center; font-weight: 800; font-size: 17px; letter-spacing: .5px; }
 .brand span { color: var(--accent); }

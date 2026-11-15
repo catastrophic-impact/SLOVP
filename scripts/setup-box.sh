@@ -6,7 +6,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq curl ca-certificates 
   libgtk-3-0 libnss3 libxss1 libasound2 libgbm1 libxtst6 libatspi2.0-0 libdrm2 libxkbcommon0 libnotify4 xdg-utils
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - >/dev/null
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nodejs
-sudo curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+sudo curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o /usr/local/bin/yt-dlp
 sudo chmod a+rx /usr/local/bin/yt-dlp
 node -v; npm -v; yt-dlp --version
 echo HOME=$HOME

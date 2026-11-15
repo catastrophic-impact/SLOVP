@@ -16,10 +16,24 @@
   "build": {
     "appId": "local.slovp.app",
     "productName": "SLOVP",
-    "directories": { "output": "release" },
-    "files": ["src/**/*", "package.json"],
-    "extraResources": [{ "from": "build/yt-dlp_linux", "to": "bin/yt-dlp" }],
-    "linux": { "target": "AppImage", "category": "AudioVideo", "artifactName": "SLOVP-${version}.AppImage" },
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build/yt-dlp_linux",
+        "to": "bin/yt-dlp"
+      }
+    ],
+    "linux": {
+      "target": "AppImage",
+      "category": "AudioVideo",
+      "artifactName": "SLOVP-${version}.AppImage"
+    },
     "afterPack": "scripts/after-pack.js"
   }
 }
