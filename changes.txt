@@ -1,0 +1,5 @@
+SLOVP changes
+v0.1.0
+- Two tabs: YouTube (from SLYTP) and Rumble (from SLRVP), each with its own code and data
+- Inactive tab loads nothing; switching tabs pauses the other tab's work and resumes it later
+- Favorites, home feed, search, quality fallback, MPV playback and downloads per tab

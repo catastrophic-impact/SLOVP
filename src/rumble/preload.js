@@ -1,0 +1,30 @@
+const { contextBridge, ipcRenderer } = require('electron');
+const call = (ch) => (...a) => ipcRenderer.invoke('rv:' + ch, ...a);
+const on = (ch) => (fn) => ipcRenderer.on(ch, (_e, p) => fn(p));
+contextBridge.exposeInMainWorld('api', {
+  onSuspend: on('suspend'),
+  onResume: on('resume'),
+  channel: call('channel'),
+  channelCached: call('channel-cached'),
+  channelMore: call('channel-more'),
+  feed: call('feed'),
+  feedCached: call('feed-cached'),
+  feedMore: call('feed-more'),
+  search: call('search'),
+  videoInfo: call('video-info'),
+  play: call('play'),
+  download: call('download'),
+  openExternal: call('open-external'),
+  copyText: call('copy-text'),
+  ytdlpStatus: call('ytdlp:status'),
+  ytdlpCheck: call('ytdlp:check'),
+  installFfmpeg: call('ffmpeg:install'),
+  onYtdlpStatus: on('ytdlp-status'),
+  onFfmpegProgress: on('ffmpeg-progress'),
+  showFile: call('show-file'),
+  onDownloadProgress: on('download-progress'),
+  getFavorites: call('favorites:get'),
+  setFavorites: call('favorites:set'),
+  getPrefs: call('prefs:get'),
+  setPrefs: call('prefs:set'),
+});
