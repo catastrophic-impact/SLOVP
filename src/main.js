@@ -77,7 +77,9 @@ app.whenReady().then(async () => {
     width: 1280, height: 800, backgroundColor: '#0f0f12', title: 'SLOVP', autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'shell', 'preload.js'), contextIsolation: true, nodeIntegration: false },
   });
-  win.on('resize', layout);
+  // Maximize/fullscreen don't always emit 'resize' with the final size on Linux, so listen to all of them and re-layout once settled.
+  const relayout = () => { layout(); setTimeout(layout, 50); };
+  for (const ev of ['resize', 'maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen', 'restore', 'show']) win.on(ev, relayout);
   await win.loadFile(path.join(__dirname, 'shell', 'index.html'));
   const last = readJson(shellFile(), {}).tab;
   showTab(tabs[last] ? last : 'youtube');

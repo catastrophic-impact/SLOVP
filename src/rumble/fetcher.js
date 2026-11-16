@@ -41,7 +41,7 @@ function createFetcher() {
     return win;
   }
 
-  async function run(url, myGen) {
+  async function run(url, myGen, opts = {}) {
     const stale = () => myGen !== gen;
     const gap = MIN_GAP_MS - (Date.now() - last);
     if (gap > 0) await sleep(gap);
@@ -68,6 +68,17 @@ function createFetcher() {
       }
       if (res) break;
     }
+    // Pages like Rumble's homepage load more cards as you scroll: scroll down until no new ones appear.
+    if (opts.scroll && res && res.items.length) {
+      let still = 0;
+      for (let i = 0; i < 8 && still < 2; i++) {
+        try { await wc.executeJavaScript('window.scrollTo(0, document.body.scrollHeight)'); } catch {}
+        await sleep(1200);
+        if (stale()) throw new Error('Paused: another tab is active');
+        let r; try { r = await wc.executeJavaScript(EXTRACT); } catch { continue; }
+        if (r.items.length > res.items.length) { res = r; still = 0; } else still++;
+      }
+    }
     last = Date.now();
     idle = setTimeout(() => { if (win && !win.isDestroyed()) win.destroy(); win = null; }, IDLE_CLOSE_MS);
     if (!res) throw new Error('Rumble did not respond in time.');
@@ -75,7 +86,7 @@ function createFetcher() {
   }
 
   // One page at a time, in order.
-  const get = (url) => { if (suspended) return Promise.reject(new Error('Paused: another tab is active')); const g = gen; const p = tail.then(() => run(url, g)); tail = p.catch(() => {}); return p; };
+  const get = (url, opts) => { if (suspended) return Promise.reject(new Error('Paused: another tab is active')); const g = gen; const p = tail.then(() => run(url, g, opts)); tail = p.catch(() => {}); return p; };
   // Drop everything queued or loading and close the hidden window (the other tab is showing).
   const suspend = () => { suspended = true; gen++; clearTimeout(idle); if (win && !win.isDestroyed()) win.destroy(); win = null; };
   const close = () => { clearTimeout(idle); if (win && !win.isDestroyed()) win.destroy(); win = null; };

@@ -48,6 +48,8 @@ exports.EXTRACT = `(() => {
   }
   const next = [...document.querySelectorAll('a[href*="page="]')].some((a) => /^next$/i.test(txt(a)) || a.rel === 'next');
   const meta = (p) => { const m = document.querySelector('meta[property="' + p + '"]'); return m ? m.content : ''; };
-  return { items: out, next, h1: txt(document.querySelector('h1')), og: meta('og:image'), title: document.title, href: location.href, ready: document.readyState,
+  const cats = location.pathname.replace(/\\/$/, '') === '/browse'
+    ? [...new Map([...document.querySelectorAll('a[href^="/category/"]')].map((a) => [a.getAttribute('href').slice(10), txt(a)])).entries()].filter((e) => e[0] && e[1]).map(([slug, name]) => ({ slug, name })) : [];
+  return { items: out, cats, next, h1: txt(document.querySelector('h1')), og: meta('og:image'), title: document.title, href: location.href, ready: document.readyState,
     challenge: /just a moment|attention required/i.test(document.title) };
 })()`;

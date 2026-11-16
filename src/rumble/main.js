@@ -63,7 +63,8 @@ function channelBase(input) {
 const chanKey = (input) => 'ch:' + (channelBase(input) || input).toLowerCase();
 
 async function channelPage(base, n) {
-  const r = await fetcher.get(`${base}/videos${n > 1 ? '?page=' + n : ''}`);
+  // The channel's main page lists uploads and past live streams together; its /videos tab leaves the streams out.
+  const r = await fetcher.get(`${base}${n > 1 ? '?page=' + n : ''}`);
   return r;
 }
 function saveChannel(input, result) {
@@ -161,6 +162,25 @@ handle('feed-more', (_e, favs) => {
   return feedMoreBusy;
 });
 
+// ---- Browse: Rumble's own public pages (homepage, live streams, categories) ----
+const browseUrl = (key) => key === 'home' ? 'https://rumble.com/' : key === 'live' ? 'https://rumble.com/browse/live'
+  : /^cat:[a-z0-9-]+$/i.test(key) ? 'https://rumble.com/category/' + key.slice(4) : null;
+handle('browse', async (_e, key, page = 1) => {
+  const base = browseUrl(key);
+  if (!base) throw new Error('Unknown page.');
+  const r = await fetcher.get(page > 1 ? `${base}?page=${page}` : base, { scroll: key === 'home' });
+  return { videos: r.items.map((i) => toVideo(i)), done: key === 'home' || !r.next || !r.items.length };
+});
+// The category list (about 1600, most popular first) comes from rumble.com/browse; kept for a day.
+handle('categories', async () => {
+  const c = cacheGet('cats');
+  if (c && Date.now() - c.at < 24 * 3600 * 1000) return c.value;
+  const r = await fetcher.get('https://rumble.com/browse');
+  if (!r.cats?.length) throw new Error('Could not read the category list.');
+  cacheSet('cats', r.cats);
+  return r.cats;
+});
+
 // ---- Search (page n) ----
 handle('search', async (_e, q, page = 1) => {
   const r = await fetcher.get(`https://rumble.com/search/video?q=${encodeURIComponent(q)}${page > 1 ? '&page=' + page : ''}`);
@@ -209,6 +229,10 @@ async function getInfo(url) {
     const cur = streams[f.height];
     if (f.url && rank && (!cur || rank > cur.rank || (rank === cur.rank && (f.tbr || 0) > cur.tbr))) streams[f.height] = { url: f.url, tbr: f.tbr || 0, rank };
   }
+  // Live streams (and anything without per-height formats): fall back to the best HLS/direct URL so MPV can still play it.
+  const playable = (d.formats || []).filter((f) => f.url && !/^(timeline|audio)/.test(f.format_id || '') && f.ext !== 'mhtml' && f.vcodec !== 'none');
+  const anyF = playable.sort((a, b) => (b.height || 0) - (a.height || 0) || (b.tbr || 0) - (a.tbr || 0))[0];
+  const fallbackUrl = anyF ? anyF.url : (d.url || '');
   audioUrl = ((d.formats || []).find((f) => /^audio/.test(f.format_id || '')) || {}).url || '';
   const qualities = [...seen.values()].sort((a, b) => b.height - a.height);
   const hasAudio = (d.formats || []).some((f) => /^audio/.test(f.format_id || ''));
@@ -218,7 +242,7 @@ async function getInfo(url) {
     views: d.view_count ?? null, likes: d.like_count ?? null,
     uploaded: d.timestamp ? d.timestamp * 1000 : null, isLive: !!d.is_live,
     description: (d.description || '').slice(0, 5000), qualities, hasAudio,
-    streams: Object.fromEntries(Object.entries(streams).map(([h, v]) => [h, v.url])), audioUrl,
+    streams: Object.fromEntries(Object.entries(streams).map(([h, v]) => [h, v.url])), audioUrl, fallbackUrl,
   };
   infoMemo.set(url, { at: Date.now(), data });
   return data;
@@ -287,6 +311,10 @@ handle('play', async (_e, { url, height, audio, thumb }) => {
       '--term-status-msg=SLSTAT ${=time-pos}', ...(thumb || info.thumb ? [`--external-file=${thumb || info.thumb}`] : []), info.audioUrl]);
   }
   const chain = heightChain(info, height).filter((h) => h && info.streams[h]);
+  if (!chain.length && info.fallbackUrl) {
+    const r = await runMpv(mpv, [...mpv.slice(1), '--ytdl=no', ...MPV_TUNING, info.fallbackUrl]);
+    return { ...r, requested: height || 0 };
+  }
   if (!chain.length) return { ok: false, code: 'NO_STREAM', message: 'No playable stream was found for this video.' };
   let last = null;
   for (const h of chain) {

@@ -21,6 +21,7 @@ const ICONS = {
   star: 'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',
   sync: 'M12 4V1L8 5l4 4V6a6 6 0 016 6c0 1-.25 1.97-.7 2.8l1.46 1.46A8 8 0 0012 4zm0 14a6 6 0 01-6-6c0-1 .25-1.97.7-2.8L5.24 7.74A8 8 0 0012 20v3l4-4-4-4z',
   copy: 'M16 1H4a2 2 0 00-2 2v14h2V3h12zm3 4H8a2 2 0 00-2 2v14a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2zm0 16H8V7h11z',
+  globe: 'M12 2a10 10 0 100 20 10 10 0 000-20zm6.9 6h-2.95a15.7 15.7 0 00-1.4-3.6A8 8 0 0118.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8 8 0 010-4h3.4a16.5 16.5 0 000 4zm.8 2h2.95c.3 1.3.8 2.5 1.4 3.6A8 8 0 015.1 16zM8.05 8H5.1a8 8 0 014.35-3.6C8.85 5.5 8.35 6.7 8.05 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.35-6h-4.7a14.7 14.7 0 010-4h4.7a14.7 14.7 0 010 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h2.95a8 8 0 01-4.35 3.6zM16.3 14a16.5 16.5 0 000-4h3.4a8 8 0 010 4z',
   external: 'M14 3v2h3.6l-9.8 9.8 1.4 1.4L19 6.4V10h2V3zM5 5a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-6h-2v6H5V7h6V5z',
   play: 'M8 5v14l11-7z',
   download: 'M5 20h14v-2H5zM19 9h-4V3H9v6H5l7 7z',
@@ -174,10 +175,33 @@ function showFailure(msg, retry) {
 let navId = 0;
 let view = { type: 'home' };
 const hist = [];
-const sameView = (a, b) => a.type === b.type && a.url === b.url && a.q === b.q;
+const sameView = (a, b) => a.type === b.type && a.url === b.url && a.q === b.q && a.key === b.key;
+const BROWSE = [['home', 'Rumble Home', 'globe'], ['live', 'Live Streams', 'play']];
+const cats = { list: null, loading: false };
+const catLabel = (key) => BROWSE.find((b) => b[0] === key)?.[1] || cats.list?.find((c) => 'cat:' + c.slug === key)?.name || 'Rumble';
+function renderBrowse() {
+  $('#browseitems').replaceChildren(...BROWSE.map(([key, label, ic]) => h('li', { class: view.type === 'browse' && view.key === key ? 'active' : '', onclick: () => navigate({ type: 'browse', key }) }, icon(ic), label)));
+  renderCats();
+}
+function renderCats() {
+  if (!cats.list) return;
+  const q = $('#catq').value.trim().toLowerCase();
+  const matches = q ? cats.list.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 80) : cats.list.slice(0, 40);
+  $('#catlist').replaceChildren(...matches.map((c) => h('li', { class: view.type === 'browse' && view.key === 'cat:' + c.slug ? 'active' : '', title: c.name, onclick: () => navigate({ type: 'browse', key: 'cat:' + c.slug }) }, c.name)));
+  $('#catmsg').textContent = q ? (matches.length ? '' : 'No match.') : `Top 40 of ${cats.list.length}. Type to search them all.`;
+}
+async function loadCats() {
+  if (cats.list || cats.loading) return;
+  cats.loading = true; $('#catmsg').textContent = 'Loading…';
+  try { cats.list = await api.categories(); renderCats(); } catch (e) { $('#catmsg').textContent = 'Could not load categories: ' + e.message; }
+  cats.loading = false;
+}
+$('#cats').addEventListener('toggle', () => { if ($('#cats').open) loadCats(); });
+$('#catq').addEventListener('input', renderCats);
 function updateNav() {
   $('#back').disabled = hist.length === 0;
   $('#sidehome').classList.toggle('active', view.type === 'home');
+  renderBrowse();
 }
 function navigate(v) {
   if (!sameView(view, v)) { hist.push(view); if (hist.length > 50) hist.shift(); }
@@ -250,6 +274,21 @@ async function load(force) {
         setupMore(async () => { const m = await api.channelMore(v.url, page + 1); page++; return m; }, !!r.done);
       },
     });
+  }
+  if (v.type === 'browse') {
+    state.current = null; renderFavs(); renderChanHead(null);
+    const label = catLabel(v.key);
+    $('#grid').replaceChildren(); setStatus('Loading…');
+    try {
+      const r = await api.browse(v.key, 1);
+      if (my !== navId) return;
+      renderToolbar(label, Date.now(), () => load(true), false);
+      setStatus(r.videos.length ? '' : 'Nothing found.'); renderGrid(r.videos);
+      let page = 1;
+      const seen = new Set(r.videos.map((x) => x.id));
+      setupMore(async () => { const m = await api.browse(v.key, page + 1); page++; return { ...m, videos: m.videos.filter((x) => !seen.has(x.id) && seen.add(x.id)) }; }, !!r.done);
+    } catch (e) { if (my === navId) showFailure(e.message, () => load(true)); }
+    return;
   }
   if (v.type === 'search') {
     state.current = null; renderFavs(); renderChanHead(null);

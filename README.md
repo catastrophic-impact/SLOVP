@@ -11,6 +11,9 @@ SLOVP combines two standalone apps, kept as separate source trees:
 Only the tab you are looking at does any work. A tab is created the first time you press it. When you switch away, the tab you left is
 suspended (its pending requests are dropped and its yt-dlp / hidden-browser work is stopped) and it picks up where it was when you come back.
 
+**Rumble tab:** besides your favorites, the sidebar has *Rumble Home* (rumble.com's homepage), *Live Streams* and a collapsible, searchable
+*Categories* list. Favorited channels include their past live streams. Live streams play in MPV.
+
 ## Run from source
 
 ```

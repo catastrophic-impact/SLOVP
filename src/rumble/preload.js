@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('api', {
   feedCached: call('feed-cached'),
   feedMore: call('feed-more'),
   search: call('search'),
+  browse: call('browse'),
+  categories: call('categories'),
   videoInfo: call('video-info'),
   play: call('play'),
   download: call('download'),

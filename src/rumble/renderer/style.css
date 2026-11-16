@@ -83,9 +83,21 @@ svg.ic.stroke { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejo
 .btn.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
 .sidebar ul { list-style: none; margin: 0; padding: 0; }
 #sidehome { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-bottom: 8px; }
-#sidehome:hover, #sidehome.active { background: var(--panel2); }
-#sidehome.active { box-shadow: inset 3px 0 var(--accent); }
-#sidehome svg { color: var(--accent); }
+#browseitems li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-bottom: 4px; }
+#sidehome:hover, #sidehome.active, #browseitems li:hover, #browseitems li.active { background: var(--panel2); }
+#sidehome.active, #browseitems li.active { box-shadow: inset 3px 0 var(--accent); }
+#sidehome svg, #browseitems svg { color: var(--accent); }
+#cats { margin: 8px 0; }
+#cats summary { cursor: pointer; padding: 8px 10px; border-radius: 8px; font-weight: 600; list-style: none; }
+#cats summary::-webkit-details-marker { display: none; }
+#cats summary::before { content: '\25B8'; display: inline-block; width: 16px; color: var(--muted); }
+#cats[open] summary::before { content: '\25BE'; }
+#cats summary:hover { background: var(--panel2); }
+.catq { width: calc(100% - 20px); margin: 4px 10px 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 5px 12px; outline: none; }
+#catlist { list-style: none; margin: 0; padding: 0; }
+#catlist li { padding: 5px 10px 5px 26px; border-radius: 8px; cursor: pointer; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#catlist li:hover, #catlist li.active { background: var(--panel2); }
+#catlist li.active { box-shadow: inset 3px 0 var(--accent); }
 .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .toolbar h2 { margin: 0; font-size: 18px; flex: 1; }
 .toolbar[hidden], .chanhead[hidden] { display: none; }
