@@ -1,6 +1,6 @@
 {
   "name": "slovp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Simple Local Online Video Player: YouTube and Rumble in two tabs, played with MPV and yt-dlp",
   "main": "src/main.js",
   "scripts": {

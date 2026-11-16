@@ -1,7 +1,8 @@
 SLOVP changes
+v0.1.1
+- Window re-lays out on maximize/fullscreen so the video grid fills it
+- Rumble: Rumble Home, Live Streams and Categories browsing; live streams play in MPV; channels include past live streams
 v0.1.0
 - Two tabs: YouTube (from SLYTP) and Rumble (from SLRVP), each with its own code and data
 - Inactive tab loads nothing; switching tabs pauses the other tab's work and resumes it later
 - Favorites, home feed, search, quality fallback, MPV playback and downloads per tab
-- Window re-lays out on maximize/fullscreen so the video grid fills it
-- Rumble: Rumble Home, Live Streams and Categories browsing; live streams play in MPV; channels include past live streams
